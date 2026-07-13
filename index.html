@@ -60,6 +60,7 @@
     letter-spacing:2px;
     animation: blink 1.6s infinite;
     white-space:nowrap;
+    z-index:2;
   }
   @keyframes blink{
     0%,100%{ opacity:1; }
@@ -73,20 +74,20 @@
   /* ---------- GALLERY STAGE ---------- */
   #gallery{
     position:absolute; inset:0;
-    display:flex; align-items:center; justify-content:center;
     background:#0a0f0a;
   }
 
   #stage-wrap{
-    position:relative;
+    position:absolute; inset:0;
     width:100%; height:100%;
-    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
   }
 
   #bgImage{
-    max-width:100%;
-    max-height:100%;
-    width:auto; height:auto;
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:cover;
+    object-position:center;
     display:block;
     -webkit-user-drag:none;
     opacity:1;
@@ -95,7 +96,8 @@
   #bgImage.fading{ opacity:0; }
 
   #charLayer{
-    position:absolute;
+    position:absolute; inset:0;
+    width:100%; height:100%;
     pointer-events:none;
   }
   .char-sprite{
@@ -105,10 +107,10 @@
     pointer-events:auto;
     filter: drop-shadow(0 6px 6px rgba(0,0,0,.5));
     transition: filter .15s ease, transform .15s ease;
-    image-rendering: pixelated;
   }
   .char-sprite img{
-    width:100%;
+    height:100%;
+    width:auto;
     display:block;
     image-rendering: pixelated;
   }
@@ -339,7 +341,7 @@
 <div id="dialogOverlay">
   <div id="dialogBox">
     <button id="dialogClose">✕</button>
-    <div id="dialogHeader" id="dialogHeaderText">마루카 부족민</div>
+    <div id="dialogHeader">마루카 부족민</div>
     <div id="dialogBody">
       <img id="dialogPortrait" src="" alt="character">
       <div id="dialogFields">
@@ -356,7 +358,9 @@
    마루카 부족 캐릭터 데이터
    - name / age 는 비워두었습니다 ("미정"). 원하는 값으로 바꿔서 채워주세요.
    - job(직업)은 배경 스토리에 맞춰 임의로 지정했습니다. 자유롭게 수정 가능합니다.
-   - left/top 은 이미지 안에서의 위치(%), width 는 이미지 너비 대비 캐릭터 폭(%) 입니다.
+   - left/top : 화면(배경) 안에서의 위치(%) → left는 캐릭터의 발 중심 x좌표, top은 발이 닿는 y좌표
+   - height : 화면 세로 길이 대비 캐릭터의 키(%). 원본 이미지 크기가 제각각이라도
+              height 기준으로 통일하면 화면상 실제 보이는 크기가 균일해집니다.
    ====================================================================== */
 const locations = [
   {
@@ -364,7 +368,7 @@ const locations = [
     loc:"족장의 천막",
     time:"깊은 밤 (자정 무렵)",
     chars:[
-      {img:"char12.png", left:50, top:70, width:24, name:"미정", age:"미정", job:"족장 (추장)"}
+      {img:"char12.png", left:50, top:92, height:38, name:"미정", age:"미정", job:"족장 (추장)"}
     ]
   },
   {
@@ -372,7 +376,7 @@ const locations = [
     loc:"부족장의 천막",
     time:"깊은 밤",
     chars:[
-      {img:"char13.png", left:50, top:68, width:24, name:"미정", age:"미정", job:"부족장"}
+      {img:"char13.png", left:50, top:92, height:38, name:"미정", age:"미정", job:"부족장"}
     ]
   },
   {
@@ -380,10 +384,10 @@ const locations = [
     loc:"전사 구역",
     time:"깊은 밤",
     chars:[
-      {img:"char14.png", left:16, top:74, width:19, name:"미정", age:"미정", job:"전사"},
-      {img:"char15.png", left:40, top:73, width:19, name:"미정", age:"미정", job:"전사"},
-      {img:"char16.png", left:64, top:68, width:22, name:"미정", age:"미정", job:"전사대장"},
-      {img:"char17.png", left:86, top:74, width:18, name:"미정", age:"미정", job:"궁수"}
+      {img:"char14.png", left:15, top:92, height:32, name:"미정", age:"미정", job:"전사"},
+      {img:"char15.png", left:39, top:94, height:32, name:"미정", age:"미정", job:"전사"},
+      {img:"char16.png", left:63, top:92, height:34, name:"미정", age:"미정", job:"전사대장"},
+      {img:"char17.png", left:87, top:94, height:32, name:"미정", age:"미정", job:"궁수"}
     ]
   },
   {
@@ -391,8 +395,8 @@ const locations = [
     loc:"농경지·목축 구역",
     time:"동틀 무렵 (새벽)",
     chars:[
-      {img:"char18.png", left:34, top:78, width:19, name:"미정", age:"미정", job:"농부"},
-      {img:"char19.png", left:66, top:78, width:19, name:"미정", age:"미정", job:"목동"}
+      {img:"char18.png", left:34, top:94, height:34, name:"미정", age:"미정", job:"농부"},
+      {img:"char19.png", left:66, top:94, height:34, name:"미정", age:"미정", job:"목동"}
     ]
   },
   {
@@ -400,7 +404,7 @@ const locations = [
     loc:"약초막",
     time:"이른 아침",
     chars:[
-      {img:"char20.png", left:50, top:72, width:21, name:"미정", age:"미정", job:"약초꾼(치료사)"}
+      {img:"char20.png", left:50, top:94, height:36, name:"미정", age:"미정", job:"약초꾼(치료사)"}
     ]
   },
   {
@@ -408,7 +412,7 @@ const locations = [
     loc:"공동 취사장",
     time:"노을 지는 저녁",
     chars:[
-      {img:"char21.png", left:14, top:80, width:17, name:"미정", age:"미정", job:"요리사"}
+      {img:"char21.png", left:16, top:94, height:32, name:"미정", age:"미정", job:"요리사"}
     ]
   },
   {
@@ -416,8 +420,8 @@ const locations = [
     loc:"사냥꾼 구역",
     time:"노을 지는 저녁",
     chars:[
-      {img:"char22.png", left:24, top:78, width:18, name:"미정", age:"미정", job:"사냥꾼"},
-      {img:"char23.png", left:76, top:78, width:18, name:"미정", age:"미정", job:"사냥꾼"}
+      {img:"char22.png", left:26, top:94, height:32, name:"미정", age:"미정", job:"사냥꾼"},
+      {img:"char23.png", left:74, top:94, height:32, name:"미정", age:"미정", job:"사냥꾼"}
     ]
   },
   {
@@ -425,8 +429,8 @@ const locations = [
     loc:"성역의 숲",
     time:"노을 지는 저녁",
     chars:[
-      {img:"char24.png", left:22, top:72, width:20, name:"미정", age:"미정", job:"주술사"},
-      {img:"char25.png", left:78, top:72, width:20, name:"미정", age:"미정", job:"무녀(주술사)"}
+      {img:"char24.png", left:24, top:92, height:34, name:"미정", age:"미정", job:"주술사"},
+      {img:"char25.png", left:76, top:92, height:34, name:"미정", age:"미정", job:"무녀(주술사)"}
     ]
   },
   {
@@ -434,7 +438,7 @@ const locations = [
     loc:"대장간",
     time:"한낮",
     chars:[
-      {img:"char26.png", left:50, top:76, width:21, name:"미정", age:"미정", job:"대장장이"}
+      {img:"char26.png", left:50, top:94, height:36, name:"미정", age:"미정", job:"대장장이"}
     ]
   },
   {
@@ -442,7 +446,7 @@ const locations = [
     loc:"붉은 천막 구역",
     time:"깊은 밤 (축제)",
     chars:[
-      {img:"char27.png", left:50, top:80, width:19, name:"미정", age:"미정", job:"무희"}
+      {img:"char27.png", left:50, top:94, height:34, name:"미정", age:"미정", job:"무희"}
     ]
   }
 ];
@@ -479,34 +483,6 @@ function updateDots(){
   });
 }
 
-// position char layer to match the actual rendered (letterboxed) image rect
-function layoutCharLayer(){
-  const cw = stageWrap.clientWidth;
-  const ch = stageWrap.clientHeight;
-  const nw = bgImage.naturalWidth;
-  const nh = bgImage.naturalHeight;
-  if(!nw || !nh) return;
-
-  const containerRatio = cw/ch;
-  const imgRatio = nw/nh;
-
-  let renderW, renderH;
-  if(imgRatio > containerRatio){
-    renderW = cw;
-    renderH = cw / imgRatio;
-  }else{
-    renderH = ch;
-    renderW = ch * imgRatio;
-  }
-  const left = (cw - renderW)/2;
-  const top = (ch - renderH)/2;
-
-  charLayer.style.left = left+"px";
-  charLayer.style.top = top+"px";
-  charLayer.style.width = renderW+"px";
-  charLayer.style.height = renderH+"px";
-}
-
 function renderScene(index, animate){
   const scene = locations[index];
 
@@ -521,17 +497,13 @@ function renderScene(index, animate){
       wrap.className = 'char-sprite';
       wrap.style.left = c.left + "%";
       wrap.style.top = c.top + "%";
-      wrap.style.width = c.width + "%";
+      wrap.style.height = c.height + "%";
       const img = document.createElement('img');
       img.src = c.img;
       wrap.appendChild(img);
       wrap.addEventListener('click', ()=> openDialog(c));
       charLayer.appendChild(wrap);
     });
-
-    bgImage.onload = layoutCharLayer;
-    // in case image is cached and onload doesn't fire
-    if(bgImage.complete) layoutCharLayer();
   };
 
   if(animate){
@@ -577,8 +549,6 @@ stageWrap.addEventListener('touchend', (e)=>{
   touchStartX = null;
 }, {passive:true});
 
-window.addEventListener('resize', layoutCharLayer);
-
 // dialog
 function openDialog(c){
   dialogPortrait.src = c.img;
@@ -595,12 +565,15 @@ dialogOverlay.addEventListener('click', (e)=>{
   if(e.target === dialogOverlay) closeDialog();
 });
 
+document.getElementById('backBtn').addEventListener('click', ()=>{
+  cover.classList.remove('hide');
+});
+
 // cover -> gallery
 cover.addEventListener('click', ()=>{
   cover.classList.add('hide');
   renderScene(0, false);
 });
-
 </script>
 </body>
 </html>
