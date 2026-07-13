@@ -245,10 +245,49 @@
     letter-spacing:2px;
     border-bottom:4px solid var(--wood-light);
   }
+  /* speech bubble with the character's one-liner */
+  #quoteWrap{
+    padding:16px 18px 6px 18px;
+  }
+  #speechBubble{
+    position:relative;
+    background:#fffdf6;
+    border:3px solid var(--wood-dark);
+    box-shadow: 0 0 0 2px var(--wood-light) inset;
+    padding:12px 16px;
+    font-size:15px;
+    line-height:1.6;
+    color:#2b1c12;
+  }
+  #speechBubble::before{
+    content:"";
+    position:absolute;
+    left:28px;
+    bottom:-13px;
+    width:0; height:0;
+    border-left:9px solid transparent;
+    border-right:9px solid transparent;
+    border-top:13px solid var(--wood-dark);
+  }
+  #speechBubble::after{
+    content:"";
+    position:absolute;
+    left:31px;
+    bottom:-8px;
+    width:0; height:0;
+    border-left:6px solid transparent;
+    border-right:6px solid transparent;
+    border-top:9px solid #fffdf6;
+  }
+  #speechBubble .quote-mark{
+    color:var(--accent2);
+    font-weight:bold;
+  }
+
   #dialogBody{
     display:flex;
     gap:16px;
-    padding:18px;
+    padding:20px 18px 18px 18px;
     align-items:flex-start;
   }
   #dialogPortrait{
@@ -300,6 +339,8 @@
     #backBtn{ font-size:11px; padding:6px 10px; top:8px; right:8px; }
     #cover .enter-msg{ font-size:13px; padding:10px 18px; bottom:10%; }
     #dialogHeader{ font-size:15px; padding:8px 12px; }
+    #quoteWrap{ padding:12px 12px 4px 12px; }
+    #speechBubble{ font-size:13px; padding:10px 12px; }
     #dialogBody{ flex-direction:column; align-items:center; padding:14px; gap:10px; }
     #dialogPortrait{ width:90px; }
     #dialogFields{ font-size:13px; width:100%; }
@@ -342,6 +383,9 @@
   <div id="dialogBox">
     <button id="dialogClose">✕</button>
     <div id="dialogHeader">마루카 부족민</div>
+    <div id="quoteWrap">
+      <div id="speechBubble"><span class="quote-mark">“</span><span id="quoteText">-</span><span class="quote-mark">”</span></div>
+    </div>
     <div id="dialogBody">
       <img id="dialogPortrait" src="" alt="character">
       <div id="dialogFields">
@@ -358,6 +402,7 @@
    마루카 부족 캐릭터 데이터
    - name / age 는 비워두었습니다 ("미정"). 원하는 값으로 바꿔서 채워주세요.
    - job(직업)은 배경 스토리에 맞춰 임의로 지정했습니다. 자유롭게 수정 가능합니다.
+   - quote(대사)는 캐릭터를 클릭했을 때 말풍선에 표시되는 한 마디입니다. 원하는 대사로 바꿔주세요.
    - left/top : 화면(배경) 안에서의 위치(%) → left는 캐릭터의 발 중심 x좌표, top은 발이 닿는 y좌표
    - height : 화면 세로 길이 대비 캐릭터의 키(%). 원본 이미지 크기가 제각각이라도
               height 기준으로 통일하면 화면상 실제 보이는 크기가 균일해집니다.
@@ -368,7 +413,7 @@ const locations = [
     loc:"족장의 천막",
     time:"깊은 밤 (자정 무렵)",
     chars:[
-      {img:"char12.png", left:50, top:92, height:38, name:"미정", age:"미정", job:"족장 (추장)"}
+      {img:"char12.png", left:50, top:92, height:38, name:"미정", age:"미정", job:"족장 (추장)", quote:"우리 부족의 앞날은 오늘 우리가 내리는 선택에 달려있다."}
     ]
   },
   {
@@ -376,7 +421,7 @@ const locations = [
     loc:"부족장의 천막",
     time:"깊은 밤",
     chars:[
-      {img:"char13.png", left:50, top:92, height:38, name:"미정", age:"미정", job:"부족장"}
+      {img:"char13.png", left:50, top:92, height:38, name:"미정", age:"미정", job:"부족장", quote:"족장님이 안 계실 땐 내가 이 부족을 지킨다."}
     ]
   },
   {
@@ -384,10 +429,10 @@ const locations = [
     loc:"전사 구역",
     time:"깊은 밤",
     chars:[
-      {img:"char14.png", left:15, top:92, height:32, name:"미정", age:"미정", job:"전사"},
-      {img:"char15.png", left:39, top:94, height:32, name:"미정", age:"미정", job:"전사"},
-      {img:"char16.png", left:63, top:92, height:34, name:"미정", age:"미정", job:"전사대장"},
-      {img:"char17.png", left:87, top:94, height:32, name:"미정", age:"미정", job:"궁수"}
+      {img:"char14.png", left:15, top:92, height:32, name:"미정", age:"미정", job:"전사", quote:"칼을 들었으면 마지막까지 물러서지 않는다."},
+      {img:"char15.png", left:39, top:94, height:32, name:"미정", age:"미정", job:"전사", quote:"오늘 밤 훈련은 아직 끝나지 않았어."},
+      {img:"char16.png", left:63, top:92, height:34, name:"미정", age:"미정", job:"전사대장", quote:"전사들의 목숨은 내가 책임진다."},
+      {img:"char17.png", left:87, top:94, height:32, name:"미정", age:"미정", job:"궁수", quote:"화살은 한 번 쏘면 되돌릴 수 없어. 신중해야지."}
     ]
   },
   {
@@ -395,8 +440,8 @@ const locations = [
     loc:"농경지·목축 구역",
     time:"동틀 무렵 (새벽)",
     chars:[
-      {img:"char18.png", left:34, top:94, height:34, name:"미정", age:"미정", job:"농부"},
-      {img:"char19.png", left:66, top:94, height:34, name:"미정", age:"미정", job:"목동"}
+      {img:"char18.png", left:34, top:94, height:34, name:"미정", age:"미정", job:"농부", quote:"땅은 거짓말을 하지 않아. 땀 흘린 만큼 돌려주지."},
+      {img:"char19.png", left:66, top:94, height:34, name:"미정", age:"미정", job:"목동", quote:"이 녀석들이 없으면 겨울을 나기 힘들어."}
     ]
   },
   {
@@ -404,7 +449,7 @@ const locations = [
     loc:"약초막",
     time:"이른 아침",
     chars:[
-      {img:"char20.png", left:50, top:94, height:36, name:"미정", age:"미정", job:"약초꾼(치료사)"}
+      {img:"char20.png", left:50, top:94, height:36, name:"미정", age:"미정", job:"약초꾼(치료사)", quote:"이 잎은 상처를 낫게 하고, 저 뿌리는 열을 내려줘."}
     ]
   },
   {
@@ -412,7 +457,7 @@ const locations = [
     loc:"공동 취사장",
     time:"노을 지는 저녁",
     chars:[
-      {img:"char21.png", left:16, top:94, height:32, name:"미정", age:"미정", job:"요리사"}
+      {img:"char21.png", left:16, top:94, height:32, name:"미정", age:"미정", job:"요리사", quote:"배고픈 채로 잠드는 부족민은 없어야지."}
     ]
   },
   {
@@ -420,8 +465,8 @@ const locations = [
     loc:"사냥꾼 구역",
     time:"노을 지는 저녁",
     chars:[
-      {img:"char22.png", left:26, top:94, height:32, name:"미정", age:"미정", job:"사냥꾼"},
-      {img:"char23.png", left:74, top:94, height:32, name:"미정", age:"미정", job:"사냥꾼"}
+      {img:"char22.png", left:26, top:94, height:32, name:"미정", age:"미정", job:"사냥꾼", quote:"발자국만 봐도 그 짐승이 어디로 갔는지 알 수 있지."},
+      {img:"char23.png", left:74, top:94, height:32, name:"미정", age:"미정", job:"사냥꾼", quote:"숲은 서두르는 자에게 아무것도 내주지 않아."}
     ]
   },
   {
@@ -429,8 +474,8 @@ const locations = [
     loc:"성역의 숲",
     time:"노을 지는 저녁",
     chars:[
-      {img:"char24.png", left:24, top:92, height:34, name:"미정", age:"미정", job:"주술사"},
-      {img:"char25.png", left:76, top:92, height:34, name:"미정", age:"미정", job:"무녀(주술사)"}
+      {img:"char24.png", left:24, top:92, height:34, name:"미정", age:"미정", job:"주술사", quote:"조상의 영혼은 언제나 이 숲 안에서 우리를 지켜본다."},
+      {img:"char25.png", left:76, top:92, height:34, name:"미정", age:"미정", job:"무녀(주술사)", quote:"불꽃이 흔들리는 걸 보니, 좋지 않은 징조야."}
     ]
   },
   {
@@ -438,7 +483,7 @@ const locations = [
     loc:"대장간",
     time:"한낮",
     chars:[
-      {img:"char26.png", left:50, top:94, height:36, name:"미정", age:"미정", job:"대장장이"}
+      {img:"char26.png", left:50, top:94, height:36, name:"미정", age:"미정", job:"대장장이", quote:"좋은 무기는 전사의 목숨을 지켜주는 두 번째 심장이야."}
     ]
   },
   {
@@ -446,7 +491,7 @@ const locations = [
     loc:"붉은 천막 구역",
     time:"깊은 밤 (축제)",
     chars:[
-      {img:"char27.png", left:50, top:94, height:34, name:"미정", age:"미정", job:"무희"}
+      {img:"char27.png", left:50, top:94, height:34, name:"미정", age:"미정", job:"무희", quote:"오늘 같은 밤엔, 춤이 곧 우리의 언어야."}
     ]
   }
 ];
@@ -468,6 +513,7 @@ const dialogPortrait = document.getElementById('dialogPortrait');
 const fieldName = document.getElementById('fieldName');
 const fieldAge = document.getElementById('fieldAge');
 const fieldJob = document.getElementById('fieldJob');
+const quoteText = document.getElementById('quoteText');
 
 // build dots
 locations.forEach((_, i)=>{
@@ -555,6 +601,7 @@ function openDialog(c){
   fieldName.textContent = c.name || "-";
   fieldAge.textContent = c.age || "-";
   fieldJob.textContent = c.job || "-";
+  quoteText.textContent = c.quote || "...";
   dialogOverlay.classList.add('show');
 }
 function closeDialog(){
