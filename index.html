@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MARUKA - 마루카 부족</title>
+<style>
+  @import url('https://cdn.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css');
+
+  :root{
+    --wood-dark:#2b1c12;
+    --wood:#4a3320;
+    --wood-light:#8a6b45;
+    --parchment:#f1e2c2;
+    --accent:#e0a13a;
+    --accent2:#c9762e;
+    --shadow: rgba(0,0,0,.55);
+  }
+
+  *{ box-sizing:border-box; }
+
+  html,body{
+    margin:0; padding:0;
+    width:100%; height:100%;
+    background:#0a0f0a;
+    font-family:'Galmuri11','Galmuri9',monospace;
+    overflow:hidden;
+    -webkit-tap-highlight-color: transparent;
+    user-select:none;
+  }
+
+  #app{
+    position:fixed; inset:0;
+    width:100%; height:100%;
+  }
+
+  /* ---------- COVER PAGE ---------- */
+  #cover{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    z-index:20;
+    transition: opacity .6s ease;
+  }
+  #cover img{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:cover;
+  }
+  #cover .enter-msg{
+    position:absolute;
+    bottom:8%;
+    left:50%;
+    transform:translateX(-50%);
+    color:var(--parchment);
+    background:rgba(20,14,8,.7);
+    border:3px solid var(--accent);
+    padding:14px 28px;
+    font-size:18px;
+    letter-spacing:2px;
+    animation: blink 1.6s infinite;
+    white-space:nowrap;
+  }
+  @keyframes blink{
+    0%,100%{ opacity:1; }
+    50%{ opacity:.35; }
+  }
+  #cover.hide{
+    opacity:0;
+    pointer-events:none;
+  }
+
+  /* ---------- GALLERY STAGE ---------- */
+  #gallery{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    background:#0a0f0a;
+  }
+
+  #stage-wrap{
+    position:relative;
+    width:100%; height:100%;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  #bgImage{
+    max-width:100%;
+    max-height:100%;
+    width:auto; height:auto;
+    display:block;
+    -webkit-user-drag:none;
+    opacity:1;
+    transition:opacity .25s ease;
+  }
+  #bgImage.fading{ opacity:0; }
+
+  #charLayer{
+    position:absolute;
+    pointer-events:none;
+  }
+  .char-sprite{
+    position:absolute;
+    transform:translate(-50%,-100%);
+    cursor:pointer;
+    pointer-events:auto;
+    filter: drop-shadow(0 6px 6px rgba(0,0,0,.5));
+    transition: filter .15s ease, transform .15s ease;
+    image-rendering: pixelated;
+  }
+  .char-sprite img{
+    width:100%;
+    display:block;
+    image-rendering: pixelated;
+  }
+  .char-sprite:hover{
+    filter: drop-shadow(0 6px 6px rgba(0,0,0,.5)) brightness(1.25);
+  }
+  .char-sprite:active{
+    transform:translate(-50%,-96%) scale(0.97);
+  }
+  .char-sprite::after{
+    content:"";
+    position:absolute;
+    top:-14px; left:50%;
+    transform:translateX(-50%);
+    width:0; height:0;
+    border-left:6px solid transparent;
+    border-right:6px solid transparent;
+    border-bottom:8px solid var(--accent);
+    animation: bob 1.2s ease-in-out infinite;
+    opacity:.9;
+  }
+  @keyframes bob{
+    0%,100%{ transform:translate(-50%,0); }
+    50%{ transform:translate(-50%,-5px); }
+  }
+
+  /* ---------- INFO BOX (time/location) ---------- */
+  #infoBox{
+    position:absolute;
+    top:16px; left:16px;
+    background:rgba(15,10,6,.78);
+    border:3px solid var(--wood-light);
+    box-shadow: inset 0 0 0 2px var(--wood-dark);
+    color:var(--parchment);
+    padding:10px 16px;
+    font-size:14px;
+    line-height:1.7;
+    z-index:10;
+    max-width:60vw;
+  }
+  #infoBox .loc{
+    color:var(--accent);
+    font-size:16px;
+    display:block;
+  }
+  #infoBox .time{
+    color:#bcd6c4;
+    display:block;
+  }
+
+  /* ---------- NAV ARROWS ---------- */
+  .nav-arrow{
+    position:absolute;
+    top:50%; transform:translateY(-50%);
+    width:52px; height:52px;
+    background:rgba(15,10,6,.7);
+    border:3px solid var(--wood-light);
+    color:var(--parchment);
+    font-size:22px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    z-index:15;
+    user-select:none;
+  }
+  .nav-arrow:hover{ background:rgba(224,161,58,.35); }
+  .nav-arrow:active{ transform:translateY(-50%) scale(.92); }
+  #prevBtn{ left:14px; }
+  #nextBtn{ right:14px; }
+
+  /* ---------- DOTS ---------- */
+  #dots{
+    position:absolute;
+    bottom:14px; left:50%;
+    transform:translateX(-50%);
+    display:flex; gap:8px;
+    z-index:15;
+    background:rgba(15,10,6,.55);
+    padding:8px 12px;
+    border:2px solid var(--wood-light);
+  }
+  .dot{
+    width:10px; height:10px;
+    background:var(--wood-light);
+    cursor:pointer;
+    border:1px solid var(--wood-dark);
+  }
+  .dot.active{ background:var(--accent); }
+
+  /* ---------- BACK TO COVER ---------- */
+  #backBtn{
+    position:absolute;
+    top:16px; right:16px;
+    z-index:15;
+    background:rgba(15,10,6,.78);
+    border:3px solid var(--wood-light);
+    color:var(--parchment);
+    padding:8px 14px;
+    font-size:13px;
+    cursor:pointer;
+  }
+  #backBtn:hover{ background:rgba(224,161,58,.35); }
+
+  /* ---------- DIALOG (character speech box) ---------- */
+  #dialogOverlay{
+    position:fixed; inset:0;
+    background:rgba(0,0,0,.6);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index:50;
+  }
+  #dialogOverlay.show{ display:flex; }
+
+  #dialogBox{
+    width:min(560px, 88vw);
+    background:var(--parchment);
+    border:6px solid var(--wood-dark);
+    box-shadow:
+      0 0 0 3px var(--wood-light) inset,
+      0 10px 0 rgba(0,0,0,.4);
+    padding:0;
+    position:relative;
+    font-family:'Galmuri11','Galmuri9',monospace;
+    color:#2b1c12;
+    max-height:80vh;
+    overflow:hidden;
+  }
+  #dialogHeader{
+    background:var(--wood-dark);
+    color:var(--accent);
+    padding:10px 16px;
+    font-size:18px;
+    letter-spacing:2px;
+    border-bottom:4px solid var(--wood-light);
+  }
+  #dialogBody{
+    display:flex;
+    gap:16px;
+    padding:18px;
+    align-items:flex-start;
+  }
+  #dialogPortrait{
+    width:110px; min-width:110px; height:auto;
+    image-rendering: pixelated;
+    background:rgba(0,0,0,.06);
+    border:3px solid var(--wood-light);
+  }
+  #dialogFields{
+    flex:1;
+    font-size:15px;
+    line-height:2;
+  }
+  #dialogFields .field-row{
+    display:flex;
+    border-bottom:2px dotted var(--wood-light);
+    padding:4px 0;
+  }
+  #dialogFields .field-label{
+    width:56px;
+    color:var(--accent2);
+    font-weight:bold;
+    flex-shrink:0;
+  }
+  #dialogFields .field-value{
+    color:#2b1c12;
+  }
+  #dialogClose{
+    position:absolute;
+    top:6px; right:8px;
+    background:transparent;
+    border:none;
+    color:var(--accent);
+    font-size:20px;
+    cursor:pointer;
+    line-height:1;
+  }
+  #dialogClose:hover{ color:#fff; }
+
+  /* ---------- MOBILE ---------- */
+  @media (max-width:700px){
+    #infoBox{ font-size:11px; padding:7px 10px; max-width:70vw; top:8px; left:8px; }
+    #infoBox .loc{ font-size:13px; }
+    .nav-arrow{ width:40px; height:40px; font-size:16px; }
+    #prevBtn{ left:6px; }
+    #nextBtn{ right:6px; }
+    #dots{ bottom:8px; padding:6px 8px; gap:6px; }
+    .dot{ width:8px; height:8px; }
+    #backBtn{ font-size:11px; padding:6px 10px; top:8px; right:8px; }
+    #cover .enter-msg{ font-size:13px; padding:10px 18px; bottom:10%; }
+    #dialogHeader{ font-size:15px; padding:8px 12px; }
+    #dialogBody{ flex-direction:column; align-items:center; padding:14px; gap:10px; }
+    #dialogPortrait{ width:90px; }
+    #dialogFields{ font-size:13px; width:100%; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- COVER PAGE -->
+  <div id="cover">
+    <img src="bg1.png" alt="MARUKA">
+    <div class="enter-msg">클릭하여 부족의 마을로 들어가기 ▶</div>
+  </div>
+
+  <!-- GALLERY -->
+  <div id="gallery">
+    <button id="backBtn">◀ 첫 화면으로</button>
+    <div id="infoBox">
+      <span class="loc" id="locText">위치</span>
+      <span class="time" id="timeText">시간</span>
+    </div>
+
+    <div id="stage-wrap">
+      <img id="bgImage" src="" alt="location">
+      <div id="charLayer"></div>
+    </div>
+
+    <div class="nav-arrow" id="prevBtn">&#10094;</div>
+    <div class="nav-arrow" id="nextBtn">&#10095;</div>
+
+    <div id="dots"></div>
+  </div>
+
+</div>
+
+<!-- CHARACTER DIALOG -->
+<div id="dialogOverlay">
+  <div id="dialogBox">
+    <button id="dialogClose">✕</button>
+    <div id="dialogHeader" id="dialogHeaderText">마루카 부족민</div>
+    <div id="dialogBody">
+      <img id="dialogPortrait" src="" alt="character">
+      <div id="dialogFields">
+        <div class="field-row"><span class="field-label">이름</span><span class="field-value" id="fieldName">-</span></div>
+        <div class="field-row"><span class="field-label">나이</span><span class="field-value" id="fieldAge">-</span></div>
+        <div class="field-row"><span class="field-label">직업</span><span class="field-value" id="fieldJob">-</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ======================================================================
+   마루카 부족 캐릭터 데이터
+   - name / age 는 비워두었습니다 ("미정"). 원하는 값으로 바꿔서 채워주세요.
+   - job(직업)은 배경 스토리에 맞춰 임의로 지정했습니다. 자유롭게 수정 가능합니다.
+   - left/top 은 이미지 안에서의 위치(%), width 는 이미지 너비 대비 캐릭터 폭(%) 입니다.
+   ====================================================================== */
+const locations = [
+  {
+    bg:"bg2.png",
+    loc:"족장의 천막",
+    time:"깊은 밤 (자정 무렵)",
+    chars:[
+      {img:"char12.png", left:50, top:70, width:24, name:"미정", age:"미정", job:"족장 (추장)"}
+    ]
+  },
+  {
+    bg:"bg3.png",
+    loc:"부족장의 천막",
+    time:"깊은 밤",
+    chars:[
+      {img:"char13.png", left:50, top:68, width:24, name:"미정", age:"미정", job:"부족장"}
+    ]
+  },
+  {
+    bg:"bg4.png",
+    loc:"전사 구역",
+    time:"깊은 밤",
+    chars:[
+      {img:"char14.png", left:16, top:74, width:19, name:"미정", age:"미정", job:"전사"},
+      {img:"char15.png", left:40, top:73, width:19, name:"미정", age:"미정", job:"전사"},
+      {img:"char16.png", left:64, top:68, width:22, name:"미정", age:"미정", job:"전사대장"},
+      {img:"char17.png", left:86, top:74, width:18, name:"미정", age:"미정", job:"궁수"}
+    ]
+  },
+  {
+    bg:"bg5.png",
+    loc:"농경지·목축 구역",
+    time:"동틀 무렵 (새벽)",
+    chars:[
+      {img:"char18.png", left:34, top:78, width:19, name:"미정", age:"미정", job:"농부"},
+      {img:"char19.png", left:66, top:78, width:19, name:"미정", age:"미정", job:"목동"}
+    ]
+  },
+  {
+    bg:"bg6.png",
+    loc:"약초막",
+    time:"이른 아침",
+    chars:[
+      {img:"char20.png", left:50, top:72, width:21, name:"미정", age:"미정", job:"약초꾼(치료사)"}
+    ]
+  },
+  {
+    bg:"bg7.png",
+    loc:"공동 취사장",
+    time:"노을 지는 저녁",
+    chars:[
+      {img:"char21.png", left:14, top:80, width:17, name:"미정", age:"미정", job:"요리사"}
+    ]
+  },
+  {
+    bg:"bg8.png",
+    loc:"사냥꾼 구역",
+    time:"노을 지는 저녁",
+    chars:[
+      {img:"char22.png", left:24, top:78, width:18, name:"미정", age:"미정", job:"사냥꾼"},
+      {img:"char23.png", left:76, top:78, width:18, name:"미정", age:"미정", job:"사냥꾼"}
+    ]
+  },
+  {
+    bg:"bg9.png",
+    loc:"성역의 숲",
+    time:"노을 지는 저녁",
+    chars:[
+      {img:"char24.png", left:22, top:72, width:20, name:"미정", age:"미정", job:"주술사"},
+      {img:"char25.png", left:78, top:72, width:20, name:"미정", age:"미정", job:"무녀(주술사)"}
+    ]
+  },
+  {
+    bg:"bg10.png",
+    loc:"대장간",
+    time:"한낮",
+    chars:[
+      {img:"char26.png", left:50, top:76, width:21, name:"미정", age:"미정", job:"대장장이"}
+    ]
+  },
+  {
+    bg:"bg11.png",
+    loc:"붉은 천막 구역",
+    time:"깊은 밤 (축제)",
+    chars:[
+      {img:"char27.png", left:50, top:80, width:19, name:"미정", age:"미정", job:"무희"}
+    ]
+  }
+];
+
+let current = 0;
+
+const cover = document.getElementById('cover');
+const gallery = document.getElementById('gallery');
+const bgImage = document.getElementById('bgImage');
+const charLayer = document.getElementById('charLayer');
+const locText = document.getElementById('locText');
+const timeText = document.getElementById('timeText');
+const dotsWrap = document.getElementById('dots');
+const stageWrap = document.getElementById('stage-wrap');
+
+const dialogOverlay = document.getElementById('dialogOverlay');
+const dialogClose = document.getElementById('dialogClose');
+const dialogPortrait = document.getElementById('dialogPortrait');
+const fieldName = document.getElementById('fieldName');
+const fieldAge = document.getElementById('fieldAge');
+const fieldJob = document.getElementById('fieldJob');
+
+// build dots
+locations.forEach((_, i)=>{
+  const d = document.createElement('div');
+  d.className = 'dot' + (i===0 ? ' active' : '');
+  d.addEventListener('click', ()=> goTo(i));
+  dotsWrap.appendChild(d);
+});
+
+function updateDots(){
+  [...dotsWrap.children].forEach((d,i)=>{
+    d.classList.toggle('active', i===current);
+  });
+}
+
+// position char layer to match the actual rendered (letterboxed) image rect
+function layoutCharLayer(){
+  const cw = stageWrap.clientWidth;
+  const ch = stageWrap.clientHeight;
+  const nw = bgImage.naturalWidth;
+  const nh = bgImage.naturalHeight;
+  if(!nw || !nh) return;
+
+  const containerRatio = cw/ch;
+  const imgRatio = nw/nh;
+
+  let renderW, renderH;
+  if(imgRatio > containerRatio){
+    renderW = cw;
+    renderH = cw / imgRatio;
+  }else{
+    renderH = ch;
+    renderW = ch * imgRatio;
+  }
+  const left = (cw - renderW)/2;
+  const top = (ch - renderH)/2;
+
+  charLayer.style.left = left+"px";
+  charLayer.style.top = top+"px";
+  charLayer.style.width = renderW+"px";
+  charLayer.style.height = renderH+"px";
+}
+
+function renderScene(index, animate){
+  const scene = locations[index];
+
+  const draw = ()=>{
+    bgImage.src = scene.bg;
+    locText.textContent = "위치: " + scene.loc;
+    timeText.textContent = "시간: " + scene.time;
+
+    charLayer.innerHTML = "";
+    scene.chars.forEach(c=>{
+      const wrap = document.createElement('div');
+      wrap.className = 'char-sprite';
+      wrap.style.left = c.left + "%";
+      wrap.style.top = c.top + "%";
+      wrap.style.width = c.width + "%";
+      const img = document.createElement('img');
+      img.src = c.img;
+      wrap.appendChild(img);
+      wrap.addEventListener('click', ()=> openDialog(c));
+      charLayer.appendChild(wrap);
+    });
+
+    bgImage.onload = layoutCharLayer;
+    // in case image is cached and onload doesn't fire
+    if(bgImage.complete) layoutCharLayer();
+  };
+
+  if(animate){
+    bgImage.classList.add('fading');
+    setTimeout(()=>{
+      draw();
+      bgImage.classList.remove('fading');
+    }, 180);
+  }else{
+    draw();
+  }
+
+  updateDots();
+}
+
+function goTo(index){
+  current = (index + locations.length) % locations.length;
+  renderScene(current, true);
+}
+
+document.getElementById('prevBtn').addEventListener('click', ()=> goTo(current-1));
+document.getElementById('nextBtn').addEventListener('click', ()=> goTo(current+1));
+
+document.addEventListener('keydown', (e)=>{
+  if(gallery.style.display === 'none') return;
+  if(e.key === 'ArrowLeft') goTo(current-1);
+  if(e.key === 'ArrowRight') goTo(current+1);
+  if(e.key === 'Escape') closeDialog();
+});
+
+// swipe support
+let touchStartX = null;
+stageWrap.addEventListener('touchstart', (e)=>{
+  touchStartX = e.changedTouches[0].clientX;
+}, {passive:true});
+stageWrap.addEventListener('touchend', (e)=>{
+  if(touchStartX === null) return;
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if(Math.abs(dx) > 40){
+    if(dx < 0) goTo(current+1);
+    else goTo(current-1);
+  }
+  touchStartX = null;
+}, {passive:true});
+
+window.addEventListener('resize', layoutCharLayer);
+
+// dialog
+function openDialog(c){
+  dialogPortrait.src = c.img;
+  fieldName.textContent = c.name || "-";
+  fieldAge.textContent = c.age || "-";
+  fieldJob.textContent = c.job || "-";
+  dialogOverlay.classList.add('show');
+}
+function closeDialog(){
+  dialogOverlay.classList.remove('show');
+}
+dialogClose.addEventListener('click', closeDialog);
+dialogOverlay.addEventListener('click', (e)=>{
+  if(e.target === dialogOverlay) closeDialog();
+});
+
+// cover -> gallery
+cover.addEventListener('click', ()=>{
+  cover.classList.add('hide');
+  renderScene(0, false);
+});
+
+</script>
+</body>
+</html>
